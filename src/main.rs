@@ -1,5 +1,5 @@
 use std::env;
-use log::{info, debug};
+use log::debug;
 use env_logger::Env;
 
 mod taskdb;

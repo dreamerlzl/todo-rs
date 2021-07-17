@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{convert::TryInto, fmt::Display};
+use std::fmt::Display;
 use log::{debug};
 
 use rusqlite::{params, Connection}; 
@@ -25,7 +25,7 @@ pub struct Task{
 
 pub fn prompt_task() {
     println!(
-        "{0: <10} | {1: <10} | {2: <10}",
+        "{0: <10} | {1: <30} | {2: <10}",
         "task_id",
         "description",
         "link(optional)"
@@ -36,9 +36,9 @@ impl Display for Task {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.link {
             Some(l) => 
-                write!(f, "{0: <10} | {1: <10} | {2: <10}", self.id, self.what, l),
+                write!(f, "{0: <10} | {1: <30} | {2: <10}", self.id, self.what, l),
             None => 
-                write!(f, "{0: <10} | {1: <10}", self.id, self.what),
+                write!(f, "{0: <10} | {1: <30}", self.id, self.what),
         }
     }
 }
@@ -46,7 +46,7 @@ impl Display for Task {
 pub fn prompt_subtask(id: u32) {
     println!("subtask of {}", &id);
     println!(
-        "{0: <10} | {1: <10} | {2: <10}",
+        "{0: <10} | {1: <30} | {2: <10}",
         "subtask_id",
         "description",
         "link(optional)"
@@ -65,9 +65,9 @@ impl Display for SubTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.link {
             Some(l) => 
-                write!(f, "{0: <10} | {1: <10} | {2: <10}", self.id, self.what, l),
+                write!(f, "{0: <10} | {1: <30} | {2: <10}", self.id, self.what, l),
             None => 
-                write!(f, "{0: <10} | {1: <10}", self.id, self.what),
+                write!(f, "{0: <10} | {1: <30}", self.id, self.what),
         }
     }
 }
@@ -86,10 +86,11 @@ impl TaskDB for TaskSqlite {
     }
 
     fn add_subtask(&mut self, id: u32, what: String, link: Option<String>) -> TodoResult<()>{
-        let mut stmt = self.conn.prepare("SELECT COUNT(id) FROM subtask WHERE subtask.subtask_of == ?")?;
+        let mut stmt = self.conn.prepare(
+            "SELECT IFNULL(MAX(subtask_rank), 0) FROM subtask WHERE subtask.subtask_of == ?")?;
         let subtask_rank = stmt.query_row(params![id], |row| {
             return row.get(0) as rusqlite::Result<i32>;
-        }).unwrap();
+        }).unwrap() + 1;
         self.conn.execute(
             "INSERT INTO subtask (what, link, subtask_of, subtask_rank) VALUES (?1, ?2, ?3, ?4)", 
             params![what, link, id, subtask_rank],
@@ -175,11 +176,11 @@ impl TaskSqlite {
     fn try_reset_id(&mut self, table_name: &str) ->TodoResult<()> {
         let mut stmt = if table_name == "task" {
                 self.conn.prepare(
-                "SELECT COUNT(id) FROM task")
+                "SELECT MAX(id) FROM task")
                 .context("fail to count remaining tasks")?
             } else {
                 self.conn.prepare(
-                    "select count(id) from subtask")
+                    "SELECT MAX(id) FROM subtask")
                     .context("fail to count remaining subtasks")?
             }; 
         let task_count = stmt.query_row(params![], |row| {
@@ -208,8 +209,8 @@ pub fn open(path: &str) -> TodoResult<Box<dyn TaskDB>> {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 what TEXT NOT NULL DEFAULT '',
                 link VARCHAR(2083),
-                subtask_rank int,
-                subtask_of int,
+                subtask_rank int NOT NULL,
+                subtask_of int NOT NULL,
                 FOREIGN KEY (subtask_of) REFERENCES task(id)
         )",
         [],
