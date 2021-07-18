@@ -201,11 +201,11 @@ impl TaskSqlite {
     fn try_reset_id(&mut self, table_name: &str) ->TodoResult<()> {
         let mut stmt = if table_name == "task" {
                 self.conn.prepare(
-                "SELECT MAX(id) FROM task")
+                "SELECT IFNULL(MAX(id), 0) FROM task")
                 .context("fail to count remaining tasks")?
             } else {
                 self.conn.prepare(
-                    "SELECT MAX(id) FROM subtask")
+                    "SELECT IFNULL(MAX(id), 0) FROM subtask")
                     .context("fail to count remaining subtasks")?
             }; 
         let task_count = stmt.query_row(params![], |row| {
