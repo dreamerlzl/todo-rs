@@ -18,14 +18,14 @@ pub trait TaskDB {
 }
 
 pub struct Task{
-    id: u32,
+    pub id: u32,
     what: String,
     link: Option<String>,
 }
 
 pub fn prompt_task() {
     println!(
-        "{0: <10} | {1: <30} | {2: <10}",
+        "{0: <10} {1: <30} {2: <10}",
         "task_id",
         "description",
         "link(optional)"
@@ -36,9 +36,9 @@ impl Display for Task {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.link {
             Some(l) => 
-                write!(f, "{0: <10} | {1: <30} | {2: <10}", self.id, self.what, l),
+                write!(f, "{0: <10} {1: <30} {2: <10}", self.id, self.what, l),
             None => 
-                write!(f, "{0: <10} | {1: <30}", self.id, self.what),
+                write!(f, "{0: <10} {1: <30}", self.id, self.what),
         }
     }
 }
@@ -46,7 +46,7 @@ impl Display for Task {
 pub fn prompt_subtask(id: u32) {
     println!("subtask of {}", &id);
     println!(
-        "{0: <10} | {1: <30} | {2: <10}",
+        "{0: <10} {1: <30} {2: <10}",
         "subtask_id",
         "description",
         "link(optional)"
@@ -65,11 +65,36 @@ impl Display for SubTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.link {
             Some(l) => 
-                write!(f, "{0: <10} | {1: <30} | {2: <10}", self.id, self.what, l),
+                write!(f, "{0: <10} {1: <30} {2: <10}", self.id, self.what, l),
             None => 
-                write!(f, "{0: <10} | {1: <30}", self.id, self.what),
+                write!(f, "{0: <10} {1: <30}", self.id, self.what),
         }
     }
+}
+
+pub fn print_subtasks(subtasks: Vec<SubTask>, indent_level: usize) -> Vec<String> {
+    let indent = "  ".repeat(indent_level);
+    subtasks
+    .iter()
+    .map(|st| 
+        if let Some(l) = &st.link {
+            format!(
+                "{0}{1: <10} {2: <30} {3: <10}",
+                indent,
+                st.id,
+                st.what,
+                l,
+            )
+        } else {
+            format!(
+                "{0}{1: <10} {2: <30}", 
+                indent,
+                st.id,
+                st.what,
+            )
+        }
+    )
+    .collect()
 }
 
 pub struct TaskSqlite {

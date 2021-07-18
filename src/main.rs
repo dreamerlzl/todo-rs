@@ -6,7 +6,7 @@ mod taskdb;
 
 use clap::{Clap, AppSettings};
 
-use crate::taskdb::{prompt_subtask, prompt_task};
+use crate::taskdb::{print_subtasks, prompt_subtask, prompt_task};
 
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -89,7 +89,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 prompt_task();
                 tasks
                 .iter()
-                .for_each(|t| println!("{}", t));
+                .for_each(|t| {
+                    println!("{}", t);
+                    print_subtasks(
+                        db.get_subtasks(t.id).unwrap(), 
+                        1,
+                    ).iter().for_each(|st| {
+                        println!("{}", st);
+                    });
+                });
             }
         }
         SubCommand::End(end) => {
