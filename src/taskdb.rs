@@ -57,6 +57,7 @@ pub struct SubTask{
     id: u32,
     what: String,
     link: Option<String>,
+    #[warn(dead_code)]
     subtask_of: u32,
     subtask_rank: u32,
 }
@@ -65,9 +66,9 @@ impl Display for SubTask {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.link {
             Some(l) => 
-                write!(f, "{0: <10} {1: <30} {2: <10}", self.id, self.what, l),
+                write!(f, "{0: <10} {1: <30} {2: <10}", self.subtask_rank, self.what, l),
             None => 
-                write!(f, "{0: <10} {1: <30}", self.id, self.what),
+                write!(f, "{0: <10} {1: <30}", self.subtask_rank, self.what),
         }
     }
 }

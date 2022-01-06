@@ -1,5 +1,6 @@
 use std::env;
 use log::debug;
+use anyhow::Context;
 use env_logger::Env;
 
 mod taskdb;
@@ -62,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("verbose!");
     }
 
-    let db_path = env::var("TODO_DB")?;
+    let db_path = env::var("TODO_DB").context("please define environment variable TODO_DB")?;
     let mut db = taskdb::open(&db_path)?;
 
     match opts.subcmd {
