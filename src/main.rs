@@ -2,11 +2,12 @@ use anyhow::Context;
 use env_logger::Env;
 use std::env;
 
-mod taskdb;
-
 use clap::{Parser, Subcommand};
 
-use crate::taskdb::{print_subtasks, prompt_subtask, prompt_task};
+use todo::taskdb::{open, print_subtasks};
+
+mod prompt;
+use prompt::{prompt_task, prompt_subtask};
 
 #[derive(Parser, Debug)]
 struct Opts {
@@ -14,7 +15,7 @@ struct Opts {
     verbose: bool,
 
     #[clap(short, long)]
-    task_id: Option<u32>, // the task id
+    task_id: Option<i32>, // the task id
 
     #[clap(subcommand)]
     subcmd: SubCommand,
@@ -26,7 +27,7 @@ enum SubCommand {
         pattern: Option<String>,
     },
     End {
-        id_or_order: u32,
+        id_or_order: i32,
     },
     Add {
         desc: String,
@@ -44,12 +45,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let opts: Opts = Opts::parse();
 
-    if opts.verbose {
-        println!("verbose!");
-    }
-
     let db_path = env::var("TODO_DB").context("please define environment variable TODO_DB")?;
-    let mut db = taskdb::open(&db_path)?;
+    let mut db = open(&db_path)?;
 
     match opts.subcmd {
         SubCommand::Add { desc, link } => {
