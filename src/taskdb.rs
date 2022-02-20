@@ -2,6 +2,7 @@ use diesel::associations::HasTable;
 use anyhow::{Context, Result};
 use diesel::{prelude::*, sql_query};
 use diesel::dsl::max;
+use diesel_migrations::embed_migrations;
 
 use crate::create_connection;
 use crate::schema::subtasks::dsl::subtasks;
@@ -116,7 +117,12 @@ impl TaskSqlite {
     }
 }
 
+//use diesel_migrations::embed_migrations;
+
+embed_migrations!();
+
 pub fn open(db_url: &str) -> TodoResult<Box<dyn TaskDB>> {
     let conn = create_connection(db_url.to_owned());
+    embedded_migrations::run(&conn)?;
     Ok(Box::new(TaskSqlite { conn }))
 }
