@@ -1,13 +1,14 @@
-use diesel::associations::HasTable;
 use anyhow::{Context, Result};
-use diesel::{prelude::*, sql_query};
+use diesel::associations::HasTable;
 use diesel::dsl::max;
+use diesel::{prelude::*, sql_query};
 use diesel_migrations::embed_migrations;
 
 use crate::create_connection;
+use crate::models::{History, NewHistory, NewSubTask, NewTask, SubTask, Task};
+use crate::schema::histories;
 use crate::schema::subtasks::dsl::subtasks;
 use crate::schema::tasks::dsl::*;
-use crate::models::{SubTask, Task, NewTask, NewSubTask};
 
 type TodoResult<T> = Result<T>;
 type IDType = i32;
@@ -18,8 +19,11 @@ pub trait TaskDB {
     fn get_task(&self, id: IDType) -> TodoResult<Option<Task>>;
     fn get_tasks(&self, pattern: Option<String>) -> TodoResult<Vec<Task>>;
     fn get_subtasks(&self, id: IDType) -> TodoResult<Vec<SubTask>>;
+    fn get_finished(&self, last_n: u32) -> TodoResult<Vec<History>>;
+    fn get_finished_within(&self, start_ts: u32, end_ts: u32) -> TodoResult<Vec<History>>;
     fn remove_task(&mut self, id: IDType) -> TodoResult<()>;
     fn remove_subtask(&mut self, id: IDType, subtask_rank: i32) -> TodoResult<()>;
+    fn finish_task(&mut self, id: IDType) -> TodoResult<()>;
 }
 
 pub fn print_subtasks(subtasks_to_print: Vec<SubTask>, indent_level: usize) -> Vec<String> {
@@ -42,22 +46,38 @@ pub struct TaskSqlite {
 
 impl TaskDB for TaskSqlite {
     fn add_task(&mut self, task_what: String, task_link: Option<String>) -> TodoResult<()> {
-        let new_task = NewTask{what: task_what, link: task_link};
-        diesel::insert_into(tasks::table()).values(&new_task).execute(&self.conn).expect("fail to add new task");
+        let new_task = NewTask {
+            what: task_what,
+            link: task_link,
+        };
+        diesel::insert_into(tasks::table())
+            .values(&new_task)
+            .execute(&self.conn)
+            .expect("fail to add new task");
         Ok(())
     }
 
-    fn add_subtask(&mut self, input_task_id: IDType, st_what: String, st_link: Option<String>) -> TodoResult<()> {
+    fn add_subtask(
+        &mut self,
+        input_task_id: IDType,
+        st_what: String,
+        st_link: Option<String>,
+    ) -> TodoResult<()> {
         // use i64 for count returned value
-        let rank: i64 = subtasks.count().filter(
-            crate::schema::subtasks::dsl::task_id.eq(input_task_id)).first(&self.conn)?;
-        let new_subtask = NewSubTask{
+        let rank: i64 = subtasks
+            .count()
+            .filter(crate::schema::subtasks::dsl::task_id.eq(input_task_id))
+            .first(&self.conn)?;
+        let new_subtask = NewSubTask {
             what: st_what,
             link: st_link,
             task_id: input_task_id,
             subtask_rank: rank as i32,
         };
-        diesel::insert_into(subtasks::table()).values(&new_subtask).execute(&self.conn).expect("fail to add new subtask");
+        diesel::insert_into(subtasks::table())
+            .values(&new_subtask)
+            .execute(&self.conn)
+            .expect("fail to add new subtask");
         Ok(())
     }
 
@@ -68,18 +88,39 @@ impl TaskDB for TaskSqlite {
 
     fn get_subtasks(&self, input_task_id: IDType) -> TodoResult<Vec<SubTask>> {
         // return subtasks associated with a task
-        let task = tasks.find(input_task_id).first::<Task>(&self.conn).expect("Task not found!");
-        let results = SubTask::belonging_to(&task).load::<SubTask>(&self.conn).context("fail to find subtask")?;
+        let task = tasks
+            .find(input_task_id)
+            .first::<Task>(&self.conn)
+            .expect("Task not found!");
+        let results = SubTask::belonging_to(&task)
+            .load::<SubTask>(&self.conn)
+            .context("fail to find subtask")?;
         Ok(results)
     }
 
     fn get_tasks(&self, pattern: Option<String>) -> TodoResult<Vec<Task>> {
         if let Some(pattern) = pattern {
-            let results = tasks.filter(what.like(format!("%{}%", pattern))).load::<Task>(&self.conn)?;
+            let results = tasks
+                .filter(what.like(format!("%{}%", pattern)))
+                .load::<Task>(&self.conn)?;
             Ok(results)
         } else {
             Ok(tasks.load::<Task>(&self.conn)?)
         }
+    }
+
+    fn get_finished(&self, last_n: u32) -> TodoResult<Vec<History>> {
+        Ok(histories::dsl::histories
+            .order_by(histories::dsl::finish_timestamp)
+            .limit(last_n as i64)
+            .load::<History>(&self.conn)?)
+    }
+
+    fn get_finished_within(&self, start_ts: u32, end_ts: u32) -> TodoResult<Vec<History>> {
+        Ok(histories::dsl::histories
+            .filter(histories::dsl::finish_timestamp.ge(start_ts as i32))
+            .filter(histories::dsl::finish_timestamp.lt(end_ts as i32))
+            .load::<History>(&self.conn)?)
     }
 
     fn remove_task(&mut self, task_id: IDType) -> TodoResult<()> {
@@ -91,13 +132,38 @@ impl TaskDB for TaskSqlite {
         Ok(())
     }
 
-    fn remove_subtask(&mut self, input_task_id: IDType, input_subtask_rank: i32) -> TodoResult<()> {
-        use crate::schema::subtasks::dsl::{task_id, subtask_rank};
-        let rows_affected = diesel::delete(
-            subtasks.filter(task_id.eq_all(input_task_id).and(subtask_rank.eq_all(input_subtask_rank)))
-            ).execute(&self.conn)?;
+    fn finish_task(&mut self, task_id: IDType) -> TodoResult<()> {
+        let task = self.get_task(task_id)?.unwrap();
+        self.remove_task(task_id)?;
+        let new_history = NewHistory {
+            what: task.what,
+            link: task.link,
+            finish_timestamp: chrono::Utc::now().timestamp() as i32,
+        };
+        let rows_affected = diesel::insert_into(histories::dsl::histories::table())
+            .values(&new_history)
+            .execute(&self.conn)?;
         if rows_affected == 0 {
-            println!("subtask{} for task {} not found!", input_subtask_rank, input_task_id);
+            println!("fail to finish task {}!", task_id);
+        }
+        Ok(())
+    }
+
+    fn remove_subtask(&mut self, input_task_id: IDType, input_subtask_rank: i32) -> TodoResult<()> {
+        use crate::schema::subtasks::dsl::{subtask_rank, task_id};
+        let rows_affected = diesel::delete(
+            subtasks.filter(
+                task_id
+                    .eq_all(input_task_id)
+                    .and(subtask_rank.eq_all(input_subtask_rank)),
+            ),
+        )
+        .execute(&self.conn)?;
+        if rows_affected == 0 {
+            println!(
+                "subtask{} for task {} not found!",
+                input_subtask_rank, input_task_id
+            );
         }
         self.try_reset_id("subtasks")?;
         Ok(())
@@ -109,9 +175,15 @@ impl TaskSqlite {
         let count = if table_name == "tasks" {
             tasks.select(max(id)).first(&self.conn)?
         } else {
-            subtasks.select(max(crate::schema::subtasks::dsl::id)).first::<Option<i32>>(&self.conn)?
-        }.unwrap_or(0);
-        let query = sql_query(format!("UPDATE `sqlite_sequence` SET `seq`={} WHERE `name`='{}'", count, table_name));
+            subtasks
+                .select(max(crate::schema::subtasks::dsl::id))
+                .first::<Option<i32>>(&self.conn)?
+        }
+        .unwrap_or(0);
+        let query = sql_query(format!(
+            "UPDATE `sqlite_sequence` SET `seq`={} WHERE `name`='{}'",
+            count, table_name
+        ));
         query.execute(&self.conn).expect("fail to reset id");
         Ok(())
     }

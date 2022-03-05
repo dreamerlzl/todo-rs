@@ -12,6 +12,7 @@ env_logger = "0.8.4"
 clap = { version = "3.1.0", features = ["derive"] }
 diesel = { version = "1.4.8", features = ["sqlite"] }
 diesel_migrations = "1.4.0"
+chrono = "0.4.19"
 
 [lib]
 name = "todo"

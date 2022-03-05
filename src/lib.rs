@@ -11,5 +11,6 @@ pub mod taskdb;
 use diesel::prelude::*;
 
 pub fn create_connection(db_url: String) -> SqliteConnection {
-    SqliteConnection::establish(&db_url).unwrap_or_else(|_| panic!("fail to open sqlite db: {}", db_url))
+    SqliteConnection::establish(&db_url)
+        .unwrap_or_else(|_| panic!("fail to open sqlite db: {}", db_url))
 }
