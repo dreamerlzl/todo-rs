@@ -17,3 +17,6 @@ chrono = "0.4.19"
 [lib]
 name = "todo"
 path = "src/lib.rs"
+
+[profile.release]
+strip = true
