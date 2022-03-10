@@ -111,7 +111,7 @@ impl TaskDB for TaskSqlite {
 
     fn get_finished(&self, last_n: u32) -> TodoResult<Vec<History>> {
         Ok(histories::dsl::histories
-            .order_by(histories::dsl::finish_timestamp)
+            .order_by(histories::dsl::finish_timestamp.desc())
             .limit(last_n as i64)
             .load::<History>(&self.conn)?)
     }
@@ -120,6 +120,7 @@ impl TaskDB for TaskSqlite {
         Ok(histories::dsl::histories
             .filter(histories::dsl::finish_timestamp.ge(start_ts as i32))
             .filter(histories::dsl::finish_timestamp.lt(end_ts as i32))
+            .order_by(histories::dsl::finish_timestamp.desc())
             .load::<History>(&self.conn)?)
     }
 

@@ -6,8 +6,9 @@ use clap::{Parser, Subcommand};
 use env_logger::Env;
 
 use todo::taskdb::{open, print_subtasks};
+use todo::models::prompt_finished_task;
 mod prompt;
-use prompt::{prompt_finished_task, prompt_subtask, prompt_task};
+use prompt::{prompt_subtask, prompt_task};
 
 #[derive(Parser, Debug)]
 struct Opts {

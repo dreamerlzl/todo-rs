@@ -5,12 +5,7 @@ pub fn prompt_task() {
     );
 }
 
-pub fn prompt_finished_task() {
-    println!(
-        "{0: <10} {1: <20} {2: <20} {3: <10}",
-        "task_id", "description", "link(optional)", "finished date"
-    );
-}
+
 
 pub fn prompt_subtask(id: i32) {
     println!("subtask of {}", &id);

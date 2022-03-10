@@ -84,11 +84,19 @@ impl Display for History {
         let date = NaiveDateTime::from_timestamp(self.finish_timestamp as i64, 0);
         let date: DateTime<Utc> = DateTime::from_utc(date, Utc);
         let date: DateTime<Local> = DateTime::from(date);
-        let date = date.format("%Y-%m-%d %H:%M:%S");
+        // let date = date.format("%Y-%m-%d %H:%M:%S");
+        let date = date.format("%Y-%m-%d");
         if let Some(l) = &self.link {
-            write!(f, "{0: <20} {1: <20} {2: <10}", self.what, l, date)
+            write!(f, "{: <15} {: <40} {: >40}", date, self.what, l)
         } else {
-            write!(f, "{0: <20} {1: <20} {2: <10}", self.what, "", date)
+            write!(f, "{: <15} {: <40} {: >40}", date, self.what, "")
         }
     }
+}
+
+pub fn prompt_finished_task() {
+    println!(
+        "{: <10} {: <15} {: <40} {: <40}",
+        "task_id", "date", "description", "link(optional)"
+    );
 }
