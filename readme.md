@@ -1,4 +1,5 @@
 # usage
+- configure a env variable `TODO_DB` to specify the path of sqlite
 ```
 todo add <desc>
 
