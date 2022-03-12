@@ -5,10 +5,8 @@ use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 use env_logger::Env;
 
+use todo::models::{prompt_finished_task, prompt_subtask, prompt_task};
 use todo::taskdb::{open, print_subtasks};
-use todo::models::prompt_finished_task;
-mod prompt;
-use prompt::{prompt_subtask, prompt_task};
 
 #[derive(Parser, Debug)]
 struct Opts {
@@ -30,7 +28,7 @@ enum SubCommand {
     Del {
         id_or_order: i32,
     },
-    Fin{
+    Fin {
         id_or_order: i32,
     },
     Add {
@@ -134,7 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db.remove_task(id)?;
             }
         }
-        SubCommand::Fin{ id_or_order } => {
+        SubCommand::Fin { id_or_order } => {
             db.finish_task(id_or_order)?;
         }
     }

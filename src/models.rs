@@ -57,11 +57,27 @@ pub struct NewHistory {
     pub finish_timestamp: i32,
 }
 
+macro_rules! my_format {
+    (task) => {
+        "{0: <10} {1: <50} {2: <10}"
+    };
+    (subtask) => {
+        "{0: <10} {1: <50} {2: <10}"
+    };
+    (subtask) => {};
+    (history) => {
+        "{: <15} {: <50} {}"
+    };
+    (id_history) => {
+        "{: <10} {: <15} {: <50} {}"
+    };
+}
+
 impl Display for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.link {
-            Some(l) => write!(f, "{0: <10} {1: <30} {2: <10}", self.id, self.what, l),
-            None => write!(f, "{0: <10} {1: <30}", self.id, self.what),
+            Some(l) => write!(f, my_format!(task), self.id, self.what, l),
+            None => write!(f, my_format!(task), self.id, self.what, ""),
         }
     }
 }
@@ -69,12 +85,8 @@ impl Display for Task {
 impl Display for SubTask {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.link {
-            Some(l) => write!(
-                f,
-                "{0: <10} {1: <30} {2: <10}",
-                self.subtask_rank, self.what, l
-            ),
-            None => write!(f, "{0: <10} {1: <30}", self.subtask_rank, self.what),
+            Some(l) => write!(f, my_format!(subtask), self.subtask_rank, self.what, l),
+            None => write!(f, my_format!(subtask), self.subtask_rank, self.what, ""),
         }
     }
 }
@@ -87,16 +99,28 @@ impl Display for History {
         // let date = date.format("%Y-%m-%d %H:%M:%S");
         let date = date.format("%Y-%m-%d");
         if let Some(l) = &self.link {
-            write!(f, "{: <15} {: <40} {: >40}", date, self.what, l)
+            write!(f, my_format!(history), date, self.what, l)
         } else {
-            write!(f, "{: <15} {: <40} {: >40}", date, self.what, "")
+            write!(f, my_format!(history), date, self.what, "")
         }
     }
 }
 
 pub fn prompt_finished_task() {
     println!(
-        "{: <10} {: <15} {: <40} {: <40}",
+        my_format!(id_history),
         "task_id", "date", "description", "link(optional)"
+    );
+}
+
+pub fn prompt_task() {
+    println!(my_format!(task), "task_id", "description", "link(optional)");
+}
+
+pub fn prompt_subtask(id: i32) {
+    println!("subtask of {}", &id);
+    println!(
+        my_format!(subtask),
+        "subtask_id", "description", "link(optional)"
     );
 }
