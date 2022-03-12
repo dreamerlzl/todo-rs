@@ -1,6 +1,29 @@
+# ov
+```
+todo
+
+USAGE:
+    todo [OPTIONS] <SUBCOMMAND>
+
+OPTIONS:
+    -h, --help                 Print help information
+    -t, --task-id <TASK_ID>
+    -v, --verbose
+
+SUBCOMMANDS:
+    add
+    del
+    fin
+    help       Print this message or the help of the given subcommand(s)
+    history
+    list
+```
+
 # usage
 - configure a env variable `TODO_DB` to specify the path of sqlite
+- the sql migrations are embedded so no need to run them manually
 ```
+# add a todo
 todo add <desc>
 
 # add a todo, with an optional link
@@ -13,10 +36,16 @@ todo list
 todo list <pattern>
 
 # mark a todo as finished
-todo end <id -> int>
+todo fin <id>
 
-# list the last 10 done histories
+# list the last 10 todo histories
 todo history -n 10
+
+# list the finished todo between the specified dates
+todo history -s 2022-01-01 -e 2022-03-01
+
+# by default the end date is now
+todo history -s 2022-03-01
 ```
 
 ## subtask
@@ -28,7 +57,7 @@ todo -t <id> list
 todo -t <task-id> add [-l link] <string>
 
 # finish a subtask
-todo -t <task-id> end <order>
+todo -t <task-id> fin <order>
 ```
 
 # migrations
