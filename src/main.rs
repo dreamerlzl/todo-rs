@@ -5,8 +5,8 @@ use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 use env_logger::Env;
 
-use todo::models::{prompt_finished_task, prompt_subtask, prompt_task};
-use todo::taskdb::{open, print_subtasks};
+use todo::display::{print_subtasks, prompt_finished_task, prompt_subtask, prompt_task};
+use todo::taskdb::open;
 
 #[derive(Parser, Debug)]
 struct Opts {

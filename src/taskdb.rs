@@ -26,20 +26,6 @@ pub trait TaskDB {
     fn finish_task(&mut self, id: IDType) -> TodoResult<()>;
 }
 
-pub fn print_subtasks(subtasks_to_print: Vec<SubTask>, indent_level: usize) -> Vec<String> {
-    let indent = "  ".repeat(indent_level);
-    subtasks_to_print
-        .iter()
-        .map(|st| {
-            if let Some(l) = &st.link {
-                format!("{0}{1: <10} {2: <30} {3: <10}", indent, st.id, st.what, l,)
-            } else {
-                format!("{0}{1: <10} {2: <30}", indent, st.id, st.what,)
-            }
-        })
-        .collect()
-}
-
 pub struct TaskSqlite {
     conn: SqliteConnection,
 }
