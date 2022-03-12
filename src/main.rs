@@ -133,7 +133,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         SubCommand::Fin { id_or_order } => {
-            db.finish_task(id_or_order)?;
+            if let Some(t) = opts.task_id {
+                // a finish of subtask would not be added into history
+                db.remove_subtask(t, id_or_order)?;
+            } else {
+                db.finish_task(id_or_order)?;
+            }
         }
     }
     Ok(())

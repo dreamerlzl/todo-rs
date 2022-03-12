@@ -64,7 +64,6 @@ macro_rules! my_format {
     (subtask) => {
         "{0: <10} {1: <50} {2: <10}"
     };
-    (subtask) => {};
     (history) => {
         "{: <15} {: <50} {}"
     };

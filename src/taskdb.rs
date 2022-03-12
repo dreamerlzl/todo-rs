@@ -72,7 +72,7 @@ impl TaskDB for TaskSqlite {
             what: st_what,
             link: st_link,
             task_id: input_task_id,
-            subtask_rank: rank as i32,
+            subtask_rank: 1 + rank as i32,
         };
         diesel::insert_into(subtasks::table())
             .values(&new_subtask)
@@ -162,7 +162,7 @@ impl TaskDB for TaskSqlite {
         .execute(&self.conn)?;
         if rows_affected == 0 {
             println!(
-                "subtask{} for task {} not found!",
+                "subtask {} for task {} not found!",
                 input_subtask_rank, input_task_id
             );
         }
