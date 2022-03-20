@@ -3,7 +3,6 @@ use std::env;
 use anyhow::Context;
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
-use env_logger::Env;
 
 use todo::display::{print_subtasks, prompt_finished_task, prompt_subtask, prompt_task};
 use todo::taskdb::open;
@@ -36,6 +35,11 @@ enum SubCommand {
         #[clap(short, long)]
         link: Option<String>,
     },
+    Note {
+        desc: String,
+        #[clap(short, long)]
+        link: Option<String>,
+    },
     History {
         #[clap(short, long)]
         n: Option<u32>,
@@ -51,11 +55,11 @@ enum SubCommand {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let env = Env::default()
-        .filter_or("MY_LOG_LEVEL", "info")
-        .write_style_or("MY_LOG_STYLE", "always");
+    // let env = Env::default()
+    //     .filter_or("MY_LOG_LEVEL", "info")
+    //     .write_style_or("MY_LOG_STYLE", "always");
 
-    env_logger::init_from_env(env);
+    // env_logger::init_from_env(env);
 
     let opts: Opts = Opts::parse();
 
@@ -70,6 +74,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 db.add_task(desc, link)?;
             }
+        }
+        SubCommand::Note { desc, link } => {
+            let task_id = db.add_task(desc, link)?;
+            db.finish_task(task_id)?;
         }
         SubCommand::List { pattern } => {
             if let Some(id) = opts.task_id {

@@ -14,7 +14,7 @@ type TodoResult<T> = Result<T>;
 type IDType = i32;
 
 pub trait TaskDB {
-    fn add_task(&mut self, what: String, link: Option<String>) -> TodoResult<()>;
+    fn add_task(&mut self, what: String, link: Option<String>) -> TodoResult<i32>;
     fn add_subtask(&mut self, id: IDType, what: String, link: Option<String>) -> TodoResult<()>;
     fn get_task(&self, id: IDType) -> TodoResult<Option<Task>>;
     fn get_tasks(&self, pattern: Option<String>) -> TodoResult<Vec<Task>>;
@@ -30,8 +30,14 @@ pub struct TaskSqlite {
     conn: SqliteConnection,
 }
 
+no_arg_sql_function!(
+    last_insert_rowid,
+    diesel::sql_types::Integer,
+    "Represents the SQL last_insert_row() function"
+);
+
 impl TaskDB for TaskSqlite {
-    fn add_task(&mut self, task_what: String, task_link: Option<String>) -> TodoResult<()> {
+    fn add_task(&mut self, task_what: String, task_link: Option<String>) -> TodoResult<i32> {
         let new_task = NewTask {
             what: task_what,
             link: task_link,
@@ -40,7 +46,9 @@ impl TaskDB for TaskSqlite {
             .values(&new_task)
             .execute(&self.conn)
             .expect("fail to add new task");
-        Ok(())
+        // https://github.com/diesel-rs/diesel/issues/771
+        let last_id = diesel::select(last_insert_rowid).get_result::<i32>(&self.conn)?;
+        Ok(last_id)
     }
 
     fn add_subtask(
