@@ -14,6 +14,7 @@ SUBCOMMANDS:
     add
     del
     fin
+    update     update the description of a todo via vi
     help       Print this message or the help of the given subcommand(s)
     history
     list

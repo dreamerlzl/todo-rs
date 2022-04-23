@@ -1,8 +1,11 @@
-use std::env;
+use std::io::Write;
+use std::process::Command;
+use std::{env, fs};
 
 use anyhow::Context;
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
+use tempfile::NamedTempFile;
 
 use todo::display::{print_subtasks, prompt_finished_task, prompt_subtask, prompt_task};
 use todo::taskdb::open;
@@ -34,6 +37,9 @@ enum SubCommand {
         desc: String,
         #[clap(short, long)]
         link: Option<String>,
+    },
+    Update {
+        id_or_order: i32,
     },
     Note {
         desc: String,
@@ -73,6 +79,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db.add_subtask(id, desc, link)?;
             } else {
                 db.add_task(desc, link)?;
+            }
+        }
+        SubCommand::Update { id_or_order } => {
+            // create a tempfile with current desc as the content
+            // spawn vi to edit the tempfile
+            // and update the current desc with the final file content
+            if let Some(task) = db.get_task(id_or_order)? {
+                let mut current_desc = NamedTempFile::new()?;
+                current_desc.write_all(task.what.as_bytes())?;
+                let path = current_desc.path();
+                Command::new("vi")
+                    .arg(path)
+                    .status()
+                    .expect("fail to use vi to update desc");
+                let new_desc = fs::read_to_string(path).expect("fail to read new desc");
+                db.update_task_desc(id_or_order, new_desc)?;
+            } else {
+                println!("no such task {id_or_order}!");
             }
         }
         SubCommand::Note { desc, link } => {
