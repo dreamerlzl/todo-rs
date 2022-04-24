@@ -93,7 +93,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .arg(path)
                     .status()
                     .expect("fail to use vi to update desc");
-                let new_desc = fs::read_to_string(path).expect("fail to read new desc");
+                let new_desc: String = fs::read_to_string(path)
+                    .expect("fail to read new desc")
+                    .trim()
+                    .to_string();
                 db.update_task_desc(id_or_order, new_desc)?;
             } else {
                 println!("no such task {id_or_order}!");
