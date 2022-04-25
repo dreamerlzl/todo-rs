@@ -1,23 +1,24 @@
 # ov
 ```
-todo
+todo 
 
 USAGE:
     todo [OPTIONS] <SUBCOMMAND>
 
 OPTIONS:
     -h, --help                 Print help information
-    -t, --task-id <TASK_ID>
-    -v, --verbose
+    -t, --task-id <TASK_ID>    
+    -v, --verbose              
 
 SUBCOMMANDS:
-    add
-    del
-    fin
-    update     update the description of a todo via vi
+    add        
+    del        
+    fin        
     help       Print this message or the help of the given subcommand(s)
-    history
-    list
+    history    
+    list       
+    note       
+    update     
 ```
 
 # usage
@@ -36,17 +37,26 @@ todo list
 # list todos whose descs contain the pattern
 todo list <pattern>
 
+# update the desc of a todo with id 2 (use vi)
+todo update 2
+
 # mark a todo as finished
 todo fin <id>
 
-# list the last 10 todo histories
+# directly add a finished todo into history
+todo note "something already finished"
+
+# list the last 10 finished todos
 todo history -n 10
 
-# list the finished todo between the specified dates
+# list the finished todos within the date range
 todo history -s 2022-01-01 -e 2022-03-01
 
 # by default the end date is now
 todo history -s 2022-03-01
+
+# by default the start date is 1970-01-01
+todo history -e 2022-04-01
 ```
 
 ## subtask
