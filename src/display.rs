@@ -8,6 +8,9 @@ macro_rules! my_format {
     (task) => {
         "{0: <10} {1: <50} {2: <10}"
     };
+    (task_multiline) => {
+        "{0: <10} {1: <50} {2: <10}\n"
+    };
     (subtask) => {
         "{0: <10} {1: <50} {2: <10}"
     };
@@ -24,9 +27,24 @@ macro_rules! my_format {
 
 impl Display for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.link {
-            Some(l) => write!(f, my_format!(task), self.id, self.what, l),
-            None => write!(f, my_format!(task), self.id, self.what, ""),
+        let desc_lines: Vec<&str> = self.what.split('\n').collect();
+        let num_lines = desc_lines.len();
+        if num_lines <= 1 {
+            match &self.link {
+                Some(l) => write!(f, my_format!(task), self.id, self.what, l),
+                None => write!(f, my_format!(task), self.id, self.what, ""),
+            }
+        } else {
+            let mut desc_iter = desc_lines.into_iter();
+            let first_line = desc_iter.next().unwrap();
+            match &self.link {
+                Some(l) => write!(f, my_format!(task_multiline), self.id, first_line, l),
+                None => write!(f, my_format!(task_multiline), self.id, first_line, ""),
+            }?;
+            for line in desc_iter {
+                write!(f, my_format!(task_multiline), "", line, "")?;
+            }
+            Ok(())
         }
     }
 }
