@@ -77,7 +77,10 @@ impl TaskDB for TaskSqlite {
     }
 
     fn get_task(&self, task_id: i32) -> TodoResult<Option<Task>> {
-        let task = tasks.find(task_id).first::<Task>(&self.conn)?;
+        let task = tasks
+            .find(task_id)
+            .first::<Task>(&self.conn)
+            .context(format!("data store failed to find task {}", task_id))?;
         Ok(Some(task))
     }
 
@@ -120,7 +123,9 @@ impl TaskDB for TaskSqlite {
     }
 
     fn remove_task(&mut self, task_id: IDType) -> TodoResult<()> {
-        let rows_affected = diesel::delete(tasks.filter(id.eq_all(task_id))).execute(&self.conn)?;
+        let rows_affected = diesel::delete(tasks.filter(id.eq_all(task_id)))
+            .execute(&self.conn)
+            .context(format!("data store failed to remove task {}", task_id))?;
         if rows_affected == 0 {
             println!("task {} not found!", task_id);
         }
@@ -129,7 +134,10 @@ impl TaskDB for TaskSqlite {
     }
 
     fn finish_task(&mut self, task_id: IDType) -> TodoResult<()> {
-        let task = self.get_task(task_id)?.unwrap();
+        let task = self
+            .get_task(task_id)
+            .context("finish task: fail to find task")?
+            .unwrap();
         self.remove_task(task_id)?;
         let new_history = NewHistory {
             what: task.what,

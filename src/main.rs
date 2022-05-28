@@ -41,6 +41,7 @@ enum SubCommand {
     Update {
         id_or_order: i32,
     },
+    Tidy,
     Note {
         desc: String,
         #[clap(short, long)]
@@ -123,6 +124,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             println!("{}", st);
                         });
                 });
+            }
+        }
+        SubCommand::Tidy => {
+            let tasks = db.get_tasks(None)?;
+            for t in tasks.iter() {
+                db.remove_task(t.id)?;
+            }
+            for t in tasks {
+                db.add_task(t.what, t.link)?;
             }
         }
         SubCommand::History {
