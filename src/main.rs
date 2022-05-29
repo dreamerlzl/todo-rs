@@ -132,7 +132,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db.remove_task(t.id)?;
             }
             for t in tasks {
-                db.add_task(t.what, t.link)?;
+                let new_task_id = db.add_task(t.what, t.link)?;
+                db.update_subtask_belongings(t.id, new_task_id)?;
             }
         }
         SubCommand::History {

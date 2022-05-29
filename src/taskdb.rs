@@ -14,7 +14,7 @@ type TodoResult<T> = Result<T>;
 type IDType = i32;
 
 pub trait TaskDB {
-    fn add_task(&mut self, what: String, link: Option<String>) -> TodoResult<i32>;
+    fn add_task(&mut self, what: String, link: Option<String>) -> TodoResult<IDType>;
     fn add_subtask(&mut self, id: IDType, what: String, link: Option<String>) -> TodoResult<()>;
     fn get_task(&self, id: IDType) -> TodoResult<Option<Task>>;
     fn get_tasks(&self, pattern: Option<String>) -> TodoResult<Vec<Task>>;
@@ -23,6 +23,8 @@ pub trait TaskDB {
     fn get_finished_within(&self, start_ts: u32, end_ts: u32) -> TodoResult<Vec<History>>;
     fn update_task_desc(&mut self, id: IDType, desc: String) -> TodoResult<()>;
     fn remove_task(&mut self, id: IDType) -> TodoResult<()>;
+    fn update_subtask_belongings(&mut self, task_id: IDType, new_task_id: IDType)
+        -> TodoResult<()>;
     fn remove_subtask(&mut self, id: IDType, subtask_rank: i32) -> TodoResult<()>;
     fn finish_task(&mut self, id: IDType) -> TodoResult<()>;
 }
@@ -38,7 +40,7 @@ no_arg_sql_function!(
 );
 
 impl TaskDB for TaskSqlite {
-    fn add_task(&mut self, task_what: String, task_link: Option<String>) -> TodoResult<i32> {
+    fn add_task(&mut self, task_what: String, task_link: Option<String>) -> TodoResult<IDType> {
         let new_task = NewTask {
             what: task_what,
             link: task_link,
@@ -156,6 +158,18 @@ impl TaskDB for TaskSqlite {
     fn update_task_desc(&mut self, task_id: IDType, desc: String) -> TodoResult<()> {
         diesel::update(tasks.filter(id.eq(task_id)))
             .set(what.eq(desc))
+            .execute(&self.conn)?;
+        Ok(())
+    }
+
+    fn update_subtask_belongings(
+        &mut self,
+        old_task_id: IDType,
+        new_task_id: IDType,
+    ) -> TodoResult<()> {
+        use crate::schema::subtasks::dsl::task_id;
+        diesel::update(subtasks.filter(task_id.eq_all(old_task_id)))
+            .set(task_id.eq(new_task_id))
             .execute(&self.conn)?;
         Ok(())
     }
