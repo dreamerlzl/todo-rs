@@ -12,8 +12,8 @@ table! {
         id -> Integer,
         what -> Text,
         link -> Nullable<Text>,
-        subtask_rank -> Integer,
         task_id -> Integer,
+        subtask_rank -> Integer,
     }
 }
 
@@ -27,8 +27,4 @@ table! {
 
 joinable!(subtasks -> tasks (task_id));
 
-allow_tables_to_appear_in_same_query!(
-    histories,
-    subtasks,
-    tasks,
-);
+allow_tables_to_appear_in_same_query!(histories, subtasks, tasks,);

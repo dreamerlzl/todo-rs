@@ -88,7 +88,7 @@ pub fn prompt_subtask(id: i32) {
     println!("subtask of {}", &id);
     println!(
         my_format!(subtask),
-        "subtask_id", "description", "link(optional)"
+        "subtask_rank", "description", "link(optional)"
     );
 }
 
@@ -98,9 +98,15 @@ pub fn print_subtasks(subtasks_to_print: Vec<SubTask>, indent_level: usize) -> V
         .iter()
         .map(|st| {
             if let Some(l) = &st.link {
-                format!(my_format!(indent_subtask), indent, st.id, st.what, l,)
+                format!(
+                    my_format!(indent_subtask),
+                    indent, st.subtask_rank, st.what, l,
+                )
             } else {
-                format!(my_format!(indent_subtask), indent, st.id, st.what, "")
+                format!(
+                    my_format!(indent_subtask),
+                    indent, st.subtask_rank, st.what, ""
+                )
             }
         })
         .collect()
