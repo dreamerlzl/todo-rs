@@ -48,7 +48,7 @@ impl TaskDB for TaskSqlite {
         diesel::insert_into(tasks::table())
             .values(&new_task)
             .execute(&self.conn)
-            .expect("fail to add new task");
+            .context("fail to add new task")?;
         // https://github.com/diesel-rs/diesel/issues/771
         let last_id = diesel::select(last_insert_rowid).get_result::<i32>(&self.conn)?;
         Ok(last_id)

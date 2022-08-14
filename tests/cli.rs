@@ -78,7 +78,3 @@ fn finish_task(id: i32, success: bool) {
 fn tidy() {
     command_assert(&["tidy"]).success();
 }
-
-fn clean() {
-    // command_assert()
-}

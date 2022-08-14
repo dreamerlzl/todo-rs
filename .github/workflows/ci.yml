@@ -29,7 +29,8 @@ jobs:
       - name: Check with clippy
         run: cargo clippy
       - name: Run tests
-        run: cargo test --verbose
+        # too many concurrent sqlite operations would cause error "database is locked"
+        run: cargo test --verbose -- --test-threads=1
   
   build:
     strategy:
@@ -45,7 +46,7 @@ jobs:
     needs: [check]
     runs-on: ${{ matrix.OS }}
     env:
-      NAME: rust-cross-compile
+      NAME: todo
       TARGET: ${{ matrix.TARGET }}
       OS: ${{ matrix.OS }}
     steps:
@@ -57,11 +58,6 @@ jobs:
             ~/.cargo/registry
             ./target
           key: build-cargo-registry-${{matrix.TARGET}}
-      - name: Install and configure dependencies
-        run:
-          if [[ $OS =~ ^ubuntu.*$ ]]; then
-            sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf
-          fi
       - name: Install rust target
         run: rustup target add $TARGET
       - name: Run build
