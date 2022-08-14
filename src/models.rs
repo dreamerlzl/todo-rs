@@ -16,7 +16,7 @@ pub struct NewTask {
     pub link: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Identifiable, Queryable, Associations)]
+#[derive(Debug, PartialEq, Eq, Identifiable, Queryable, Associations)]
 #[belongs_to(Task)]
 #[table_name = "subtasks"]
 pub struct SubTask {
@@ -37,7 +37,7 @@ pub struct NewSubTask {
     pub subtask_rank: i32,
 }
 
-#[derive(Debug, PartialEq, Identifiable, Queryable)]
+#[derive(Debug, PartialEq, Eq, Identifiable, Queryable)]
 #[table_name = "histories"]
 pub struct History {
     pub id: i32,

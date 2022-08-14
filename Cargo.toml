@@ -1,5 +1,3 @@
-cargo-features = ["strip"]
-
 [package]
 name = "todo"
 version = "0.1.0"
@@ -21,5 +19,3 @@ predicates = "2.1.1"
 name = "todo"
 path = "src/lib.rs"
 
-[profile.release]
-strip = true
