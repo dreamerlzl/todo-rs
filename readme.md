@@ -1,24 +1,25 @@
 # ov
 ```
-todo 
+todo
 
 USAGE:
     todo [OPTIONS] <SUBCOMMAND>
 
 OPTIONS:
     -h, --help                 Print help information
-    -t, --task-id <TASK_ID>    
-    -v, --verbose              
+    -t, --task-id <TASK_ID>
+    -v, --verbose
 
 SUBCOMMANDS:
-    add        
-    del        
-    fin        
+    add
+    del
+    fin
     help       Print this message or the help of the given subcommand(s)
-    history    
-    list       
-    note       
-    update     
+    history
+    list
+    note
+    tidy
+    update
 ```
 
 # usage
@@ -70,6 +71,12 @@ todo -t <task-id> add [-l link] <string>
 # finish a subtask
 todo -t <task-id> fin <order>
 ```
+
+# FAQ
+- how to sync my todo.db to other devices?
+  - check [syncthing](https://syncthing.net/)
+- why don't you make an interactive cli?
+  - for easier pipelining with other existing shell utilities, like `fzf`, `rg`, etc.
 
 # migrations
 - `diesel migration generate <name>`
