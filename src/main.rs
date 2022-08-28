@@ -31,7 +31,7 @@ enum SubCommand {
         id_or_order: i32,
     },
     Fin {
-        id_or_order: i32,
+        id_or_order: Vec<i32>,
     },
     Add {
         desc: String,
@@ -178,12 +178,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db.remove_task(id)?;
             }
         }
-        SubCommand::Fin { id_or_order } => {
+        SubCommand::Fin {
+            id_or_order: id_or_orders,
+        } => {
             if let Some(t) = opts.task_id {
                 // a finish of subtask would not be added into history
-                db.remove_subtask(t, id_or_order)?;
+                for id_or_order in id_or_orders.into_iter() {
+                    db.remove_subtask(t, id_or_order)?;
+                }
             } else {
-                db.finish_task(id_or_order)?;
+                for id_or_order in id_or_orders.into_iter() {
+                    db.finish_task(id_or_order)?;
+                }
             }
         }
     }

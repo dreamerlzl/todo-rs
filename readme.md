@@ -41,8 +41,8 @@ todo list <pattern>
 # update the desc of a todo with id 2 (use vi)
 todo update 2
 
-# mark a todo as finished
-todo fin <id>
+# mark todo(s) as finished
+todo fin <id> [<id2> <id3>]
 
 # directly add a finished todo into history
 todo note "something already finished"
