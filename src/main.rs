@@ -6,7 +6,6 @@ use anyhow::Context;
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
 use tempfile::NamedTempFile;
-
 use todo::display::{print_subtasks, prompt_finished_task, prompt_subtask, prompt_task};
 use todo::taskdb::open;
 

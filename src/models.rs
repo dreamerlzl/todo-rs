@@ -1,5 +1,6 @@
-use super::schema::{histories, subtasks, tasks};
 use diesel::Queryable;
+
+use super::schema::{histories, subtasks, tasks};
 
 #[derive(Identifiable, Debug, Queryable, PartialEq, Eq)]
 #[table_name = "tasks"]
