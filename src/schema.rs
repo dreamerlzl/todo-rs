@@ -1,4 +1,6 @@
-table! {
+// @generated automatically by Diesel CLI.
+
+diesel::table! {
     histories (id) {
         id -> Integer,
         what -> Text,
@@ -7,24 +9,25 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     subtasks (id) {
         id -> Integer,
         what -> Text,
         link -> Nullable<Text>,
-        task_id -> Integer,
         subtask_rank -> Integer,
+        task_id -> Integer,
     }
 }
 
-table! {
+diesel::table! {
     tasks (id) {
         id -> Integer,
         what -> Text,
         link -> Nullable<Text>,
+        priority -> Integer,
     }
 }
 
-joinable!(subtasks -> tasks (task_id));
+diesel::joinable!(subtasks -> tasks (task_id));
 
-allow_tables_to_appear_in_same_query!(histories, subtasks, tasks,);
+diesel::allow_tables_to_appear_in_same_query!(histories, subtasks, tasks,);

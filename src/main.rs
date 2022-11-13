@@ -5,8 +5,11 @@ use std::{env, fs};
 use anyhow::Context;
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
+use colored::Colorize;
+use prettytable::{row, Table};
 use tempfile::NamedTempFile;
-use todo::display::{print_subtasks, prompt_finished_task, prompt_subtask, prompt_task};
+use todo::display::{prompt_finished_task, prompt_subtask};
+use todo::models::NewTask;
 use todo::taskdb::open;
 
 #[derive(Parser, Debug)]
@@ -33,16 +36,19 @@ enum SubCommand {
         id_or_order: Vec<i32>,
     },
     Add {
-        desc: String,
+        what: String,
         #[clap(short, long)]
         link: Option<String>,
+
+        #[clap(short, long)]
+        priority: Option<u32>,
     },
     Update {
         id_or_order: i32,
     },
     Tidy,
     Note {
-        desc: String,
+        what: String,
         #[clap(short, long)]
         link: Option<String>,
     },
@@ -73,12 +79,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut db = open(&db_path)?;
 
     match opts.subcmd {
-        SubCommand::Add { desc, link } => {
+        SubCommand::Add {
+            what,
+            link,
+            priority,
+        } => {
             // add a new task
             if let Some(id) = opts.task_id {
-                db.add_subtask(id, desc, link)?;
+                db.add_subtask(id, what, link)?;
             } else {
-                db.add_task(desc, link)?;
+                db.add_task(NewTask {
+                    what,
+                    link,
+                    priority: priority.unwrap_or(5) as i32,
+                })?;
             }
         }
         SubCommand::Update { id_or_order } => {
@@ -102,8 +116,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("no such task {id_or_order}!");
             }
         }
-        SubCommand::Note { desc, link } => {
-            let task_id = db.add_task(desc, link)?;
+        SubCommand::Note { what, link } => {
+            let task_id = db.add_task(NewTask {
+                what,
+                link,
+                priority: 5,
+            })?;
             db.finish_task(task_id)?;
         }
         SubCommand::List { pattern } => {
@@ -113,16 +131,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 subtasks.iter().for_each(|subtask| println!("{}", subtask));
                 // log output
             } else {
-                let tasks = db.get_tasks(pattern)?;
-                prompt_task();
-                tasks.iter().for_each(|t| {
-                    println!("{}", t);
-                    print_subtasks(db.get_subtasks(t.id).unwrap(), 1)
-                        .iter()
-                        .for_each(|st| {
-                            println!("{}", st);
-                        });
-                });
+                let mut tasks = db.get_tasks(pattern)?;
+                tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
+                let mut table = Table::new();
+                table.add_row(row!["id", "pri", "description", "link"]);
+                for task in tasks {
+                    let priority = match task.priority as u32 {
+                        p @ 0..=3 => p.to_string().blue(),
+                        p @ 4..=6 => p.to_string().green(),
+                        p @ 7..=8 => p.to_string().yellow(),
+                        p @ 9.. => p.to_string().red(),
+                    };
+                    table.add_row(row![
+                        task.id,
+                        priority,
+                        task.what,
+                        task.link.unwrap_or_else(|| "".to_owned())
+                    ]);
+                }
+                table.printstd();
             }
         }
         SubCommand::Tidy => {
@@ -131,7 +158,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db.remove_task(t.id)?;
             }
             for t in tasks {
-                let new_task_id = db.add_task(t.what, t.link)?;
+                let new_task_id = db.add_task(NewTask {
+                    what: t.what,
+                    link: t.link,
+                    priority: t.priority,
+                })?;
                 db.update_subtask_belongings(t.id, new_task_id)?;
             }
         }

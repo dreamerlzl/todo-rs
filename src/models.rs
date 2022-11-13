@@ -8,6 +8,7 @@ pub struct Task {
     pub id: i32,
     pub what: String,
     pub link: Option<String>,
+    pub priority: i32,
 }
 
 #[derive(Insertable)]
@@ -15,6 +16,7 @@ pub struct Task {
 pub struct NewTask {
     pub what: String,
     pub link: Option<String>,
+    pub priority: i32,
 }
 
 #[derive(Debug, PartialEq, Eq, Identifiable, Queryable, Associations)]

@@ -14,7 +14,7 @@ type TodoResult<T> = Result<T>;
 type IDType = i32;
 
 pub trait TaskDB {
-    fn add_task(&mut self, what: String, link: Option<String>) -> TodoResult<IDType>;
+    fn add_task(&mut self, task: NewTask) -> TodoResult<IDType>;
     fn add_subtask(&mut self, id: IDType, what: String, link: Option<String>) -> TodoResult<()>;
     fn get_task(&self, id: IDType) -> TodoResult<Option<Task>>;
     fn get_tasks(&self, pattern: Option<String>) -> TodoResult<Vec<Task>>;
@@ -40,11 +40,7 @@ no_arg_sql_function!(
 );
 
 impl TaskDB for TaskSqlite {
-    fn add_task(&mut self, task_what: String, task_link: Option<String>) -> TodoResult<IDType> {
-        let new_task = NewTask {
-            what: task_what,
-            link: task_link,
-        };
+    fn add_task(&mut self, new_task: NewTask) -> TodoResult<IDType> {
         diesel::insert_into(tasks::table())
             .values(&new_task)
             .execute(&self.conn)
