@@ -22,6 +22,7 @@ pub trait TaskDB {
     fn get_finished(&self, last_n: u32) -> TodoResult<Vec<History>>;
     fn get_finished_within(&self, start_ts: u32, end_ts: u32) -> TodoResult<Vec<History>>;
     fn update_task_desc(&mut self, id: IDType, desc: String) -> TodoResult<()>;
+    fn update_task_priority(&mut self, task_id: IDType, pri: i32) -> TodoResult<()>;
     fn remove_task(&mut self, id: IDType) -> TodoResult<()>;
     fn update_subtask_belongings(&mut self, task_id: IDType, new_task_id: IDType)
         -> TodoResult<()>;
@@ -154,6 +155,13 @@ impl TaskDB for TaskSqlite {
     fn update_task_desc(&mut self, task_id: IDType, desc: String) -> TodoResult<()> {
         diesel::update(tasks.filter(id.eq(task_id)))
             .set(what.eq(desc))
+            .execute(&self.conn)?;
+        Ok(())
+    }
+
+    fn update_task_priority(&mut self, task_id: IDType, pri: i32) -> TodoResult<()> {
+        diesel::update(tasks.filter(id.eq(task_id)))
+            .set(priority.eq(pri))
             .execute(&self.conn)?;
         Ok(())
     }

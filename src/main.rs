@@ -5,7 +5,6 @@ use std::{env, fs};
 use anyhow::Context;
 use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
-use colored::Colorize;
 use prettytable::{row, Table};
 use tempfile::NamedTempFile;
 use todo::display::{prompt_finished_task, prompt_subtask};
@@ -45,6 +44,9 @@ enum SubCommand {
     },
     Update {
         id_or_order: i32,
+
+        #[clap(short, long)]
+        priority: Option<u32>,
     },
     Tidy,
     Note {
@@ -95,7 +97,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })?;
             }
         }
-        SubCommand::Update { id_or_order } => {
+        SubCommand::Update {
+            id_or_order,
+            priority: Some(p),
+        } => {
+            db.update_task_priority(id_or_order, p as i32)?;
+        }
+        SubCommand::Update {
+            id_or_order,
+            priority: None,
+        } => {
             // create a tempfile with current desc as the content
             // spawn vi to edit the tempfile
             // and update the current desc with the final file content
@@ -137,10 +148,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 table.add_row(row!["id", "pri", "description", "link"]);
                 for task in tasks {
                     let priority = match task.priority as u32 {
-                        p @ 0..=3 => p.to_string().blue(),
-                        p @ 4..=6 => p.to_string().green(),
-                        p @ 7..=8 => p.to_string().yellow(),
-                        p @ 9.. => p.to_string().red(),
+                        _p @ 0..=3 => "🥶",
+                        _p @ 4..=6 => "🤡",
+                        _p @ 7..=8 => "😅",
+                        _p @ 9.. => "🥵",
                     };
                     table.add_row(row![
                         task.id,
